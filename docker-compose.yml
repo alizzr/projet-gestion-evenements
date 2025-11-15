@@ -1,0 +1,59 @@
+# Fichier: docker-compose.yml (Mis à jour)
+
+services:
+
+  # --- Service Utilisateur (Laravel) ---
+  user_service:
+    build:
+      context: ./services/user-service # Emplacement du Dockerfile
+      dockerfile: Dockerfile
+    container_name: user_service_app
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      # Synchronisation du code local avec le conteneur
+      - ./services/user-service:/var/www
+    depends_on:
+      - db_mysql   # S'assure que la BDD est lancée avant
+      - cache_redis # S'assure que Redis est lancé avant
+    networks:
+      - events_network
+
+  # --- Base de données principale ---
+  db_mysql:
+    image: mysql:8.0
+    container_name: mysql_events
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: db_events_main
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: root_password
+    ports:
+      # Utilisez "3306:3306" si vous avez arrêté XAMPP
+      # ou "3307:3306" si vous avez choisi la solution 2
+      - "3306:3306" 
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - events_network
+
+  # --- Service de Caching ---
+  cache_redis:
+    image: redis:6.2-alpine
+    container_name: redis_events
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - events_network
+
+volumes:
+  mysql_data:
+  redis_data:
+
+networks:
+  events_network:
+    driver: bridge
