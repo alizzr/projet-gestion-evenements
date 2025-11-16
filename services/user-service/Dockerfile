@@ -1,4 +1,4 @@
-# Fichier: services/user-service/Dockerfile (Mis à jour avec Sonar-Scanner)
+# Fichier: services/user-service/Dockerfile (Corrigé - Commentaires déplacés)
 
 # Utiliser une image PHP 8.2 officielle
 FROM php:8.2-fpm
@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev \
     zip \
     unzip \
-    wget # <-- AJOUTÉ
+    wget
 
 # Installer les extensions PHP requises par Laravel
 RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
@@ -39,16 +39,16 @@ RUN mkdir -p /opt && \
 
 # Créer un utilisateur pour l'application
 RUN adduser --shell /bin/bash --uid ${uid} --disabled-password --gecos "" ${user}
-USER ${user}
 
 # Définir le répertoire de travail
 WORKDIR /var/www
 
 # --- CORRECTION ICI ---
-# Copier tout le code (que Jenkins a cloné) DANS l'image
-USER root # On repasse en root pour copier dans /var/www
+# On repasse en root pour copier dans /var/www
+USER root
 COPY . .
-USER ${user} # On re-bascule à l'utilisateur laravel
+# On re-bascule à l'utilisateur laravel
+USER ${user}
 # --- FIN DE LA CORRECTION ---
 
 # Exposer le port 9000 pour php-fpm
