@@ -1,4 +1,4 @@
-// Fichier: Jenkinsfile (FINAL Corrigé pour le Token)
+// Fichier: Jenkinsfile (FINAL - Gestion du cycle de vie)
 pipeline {
     agent any
 
@@ -8,8 +8,9 @@ pipeline {
         stage('Build') {
             steps {
                 script {
-                    echo "Étape 1: Construction de l'environnement..."
-                    sh 'docker-compose build'
+                    echo "Étape 1: Construction de l'image user_service..."
+                    // On construit spécifiquement le service qui nous intéresse
+                    sh 'docker-compose build user_service'
                 }
             }
         }
@@ -18,14 +19,23 @@ pipeline {
         stage('Test & Analysis') {
             steps {
                 script {
-                    echo "Étape 2a: Lancement des tests..."
+                    echo "Étape 2a: Redémarrage du conteneur user_service..."
+                    // On arrête l'ancien conteneur (s'il existe)
+                    sh 'docker-compose stop user_service'
+                    // On le supprime
+                    sh 'docker-compose rm -f user_service'
+                    // On démarre le nouveau (basé sur l'image de l'Étape 1)
+                    // Il va automatiquement se lier aux autres services (DB, etc.)
+                    sh 'docker-compose up -d user_service'
+
+                    echo "Attente de 10s que le service Laravel démarre..."
+                    sh 'sleep 10' // Laisse le temps au conteneur de démarrer
+
+                    echo "Étape 2b: Lancement des tests..."
                     sh 'docker-compose exec -T user_service php artisan test'
 
-                    echo "Étape 2b: Lancement de l'analyse SonarQube..."
-
-                    // Cette étape injecte la variable $SONAR_AUTH_TOKEN
+                    echo "Étape 2c: Lancement de l'analyse SonarQube..."
                     withSonarQubeEnv('SonarQube') {
-                        // On passe aux simples quotes ''' pour que Groovy laisse le $ tranquille
                         sh '''
                         docker-compose exec -T user_service \
                         /opt/sonar-scanner/bin/sonar-scanner \
@@ -34,15 +44,6 @@ pipeline {
                         -Dsonar.sources=.
                         '''
                     }
-                }
-            }
-        }
-
-        // --- ÉTAPE 3: RELEASE ---
-        stage('Release') {
-            steps {
-                script {
-                    echo "Étape 3: (Futur) Création et push de l'image de production..."
                 }
             }
         }
