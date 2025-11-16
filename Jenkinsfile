@@ -1,50 +1,44 @@
-// Fichier: Jenkinsfile
+// Fichier: Jenkinsfile (CORRIGÉ)
 pipeline {
-    agent any // Dit à Jenkins d'exécuter cela sur n'importe quel agent disponible
+    agent any
 
     stages {
-
-        // --- ÉTAPE 1: BUILD (Construction) ---
+        
+        // --- ÉTAPE 1: BUILD (C'est OK) ---
         stage('Build') {
             steps {
                 script {
                     echo "Étape 1: Construction de l'environnement..."
-                    // Jenkins va construire les images Docker
+                    // C'est bien de reconstruire les images
                     sh 'docker-compose build'
                 }
             }
         }
 
-        // --- ÉTAPE 2: TEST (Test Intelligence) ---
+        // --- ÉTAPE 2: TEST (Modifié) ---
         stage('Test') {
             steps {
                 script {
                     echo "Étape 2: Lancement des tests..."
-                    // Jenkins lance les services (BDD, app) en arrière-plan
-                    sh 'docker-compose up -d'
-
-                    // Jenkins exécute les tests (exactement comme vous l'avez fait)
+                    
+                    // ON SUPPRIME LA LIGNE 'docker-compose up -d'
+                    // Les services tournent déjà !
+                    
                     echo "Lancement des tests unitaires et feature..."
+                    // On exécute juste le test sur le service qui tourne
                     sh 'docker-compose exec user_service php artisan test'
-
+                    
                     echo "Lancement de l'analyse SonarQube..."
-                    // C'est ici que nous ajouterons l'étape SonarQube
+                    // (futur)
                 }
             }
         }
-
-        // --- ÉTAPE 3: CLEANUP (Nettoyage) ---
-        stage('Cleanup') {
-            steps {
-                script {
-                    echo "Étape 3: Arrêt de l'environnement de test..."
-                    // Jenkins arrête et supprime les conteneurs de test
-                    sh 'docker-compose down'
-                }
-            }
-        }
-
-        // --- ÉTAPE 4: RELEASE (Orchestration) ---
+        
+        // --- ÉTAPE 3: CLEANUP (Supprimé) ---
+        // ON SUPPRIME TOUTE L'ÉTAPE CLEANUP
+        // 'docker-compose down' arrêterait Jenkins lui-même !
+        
+        // --- ÉTAPE 4: RELEASE (C'est OK) ---
         stage('Release') {
             steps {
                 script {
