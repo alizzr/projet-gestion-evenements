@@ -1,4 +1,4 @@
-# Fichier: services/user-service/Dockerfile (FINAL - Ordre corrigé)
+# Fichier: services/user-service/Dockerfile (FINAL - sans --no-dev)
 
 # Utiliser une image PHP 8.2 officielle
 FROM php:8.2-fpm
@@ -47,8 +47,9 @@ USER root
 # 1. Copier TOUT le code d'abord (y compris 'artisan')
 COPY . .
 
-# 2. Installer les dépendances (maintenant 'artisan' existe)
-RUN composer install --no-dev --no-interaction --optimize-autoloader
+# 2. Installer les dépendances (y compris --dev)
+#    (On enlève --no-dev pour installer PHPUnit)
+RUN composer install --no-interaction --optimize-autoloader
 
 # 3. Donner la propriété de tous les fichiers à notre utilisateur
 RUN chown -R ${user}:${user} .
