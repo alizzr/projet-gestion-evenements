@@ -1,4 +1,4 @@
-// Fichier: Jenkinsfile (FINAL - avec withCredentials)
+// Fichier: Jenkinsfile (FINAL - Sans SonarQube)
 pipeline {
     agent any
 
@@ -14,8 +14,8 @@ pipeline {
             }
         }
 
-        // --- ÉTAPE 2: TEST & ANALYSIS ---
-        stage('Test & Analysis') {
+        // --- ÉTAPE 2: TEST ---
+        stage('Test') {
             post {
                 always {
                     script {
@@ -35,30 +35,7 @@ pipeline {
                     echo "Étape 2b: Lancement des tests..."
                     sh 'docker-compose -f docker-compose.jenkins.yml exec -T --workdir /var/www user_service php artisan test'
                     
-                    echo "Étape 2c: Lancement de l'analyse SonarQube..."
-                    
-                    // --- CORRECTION FINALE ---
-                    // On n'utilise plus withSonarQubeEnv.
-                    // On utilise withCredentials pour injecter le token dans une variable.
-                    withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN_SECRET')]) {
-                        // On utilise les doubles quotes """ pour que Jenkins remplace ${SONAR_TOKEN_SECRET}
-                        sh """
-                        docker-compose -f docker-compose.jenkins.yml exec -T --workdir /var/www user_service \
-                        /opt/sonar-scanner/bin/sonar-scanner \
-                        -Dsonar.host.url=http://sonarqube:9000 \
-                        -Dsonar.login=${SONAR_TOKEN_SECRET} \
-                        -Dsonar.sources=.
-                        """
-                    }
-                }
-            }
-        }
-        
-        // --- ÉTAPE 3: RELEASE ---
-        stage('Release') {
-            steps {
-                script {
-                    echo "Étape 3: (Futur) Création et push de l'image de production..."
+                    // --- ÉTAPE SONARQUBE SUPPRIMÉE ---
                 }
             }
         }
