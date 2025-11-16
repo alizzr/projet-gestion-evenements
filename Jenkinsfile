@@ -1,4 +1,4 @@
-// Fichier: Jenkinsfile (FINAL - Gestion complète du cycle de vie)
+// Fichier: Jenkinsfile (FINAL - Logique de mise à jour)
 pipeline {
     agent any
 
@@ -9,6 +9,7 @@ pipeline {
             steps {
                 script {
                     echo "Étape 1: Construction de l'image user_service..."
+                    // Construit la nouvelle image à partir du code
                     sh 'docker-compose build user_service'
                 }
             }
@@ -16,24 +17,16 @@ pipeline {
 
         // --- ÉTAPE 2: TEST & ANALYSIS ---
         stage('Test & Analysis') {
-            // "post" s'assure que le cleanup se lance MÊME SI les tests échouent
-            post {
-                always {
-                    script {
-                        echo "Étape 2-POST: Arrêt et nettoyage du conteneur de test..."
-                        sh 'docker-compose stop user_service'
-                        sh 'docker-compose rm -f user_service'
-                    }
-                }
-            }
             steps {
                 script {
-                    echo "Étape 2a: Démarrage du conteneur user_service..."
-                    // On démarre le nouveau conteneur à partir de l'image construite
-                    sh 'docker-compose up -d user_service'
+                    echo "Étape 2a: Mise à jour du conteneur user_service..."
+                    // Force le conteneur 'user_service' à redémarrer
+                    // en utilisant la nouvelle image de l'étape 1.
+                    // --no-deps garantit qu'il ne touche pas aux BDD.
+                    sh 'docker-compose up -d --no-deps user_service'
 
-                    echo "Attente de 10s que le service Laravel démarre..."
-                    sh 'sleep 10' // Laisse le temps au conteneur de démarrer
+                    echo "Attente de 10s que le service Laravel redémarre..."
+                    sh 'sleep 10'
 
                     echo "Étape 2b: Lancement des tests..."
                     sh 'docker-compose exec -T user_service php artisan test'
@@ -52,7 +45,7 @@ pipeline {
             }
         }
         
-        // --- ÉTAPE 3: RELEASE ---
+        // --- ÉTAPE 3: RELEASE (Pas de post-cleanup) ---
         stage('Release') {
             steps {
                 script {
