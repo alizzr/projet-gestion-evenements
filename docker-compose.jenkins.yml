@@ -1,0 +1,37 @@
+# Fichier: docker-compose.jenkins.yml (Nouveau fichier)
+version: '3.8' # (On a besoin de la version ici)
+
+services:
+  # Définit le service à tester
+  user_service:
+    # Il lit la configuration de build dans le fichier principal
+    build:
+      context: ./services/user-service
+      dockerfile: Dockerfile
+    container_name: user_service_test_app # Nom différent pour éviter les conflits
+    working_dir: /var/www
+    volumes:
+      - ./services/user-service:/var/www
+    depends_on:
+      - db_mysql
+      - db_postgres
+      - cache_redis
+    # Se connecte au réseau créé par le docker-compose.yml principal
+    networks:
+      - events_network
+
+# Définit les services externes (BDD, etc.) dont on dépend
+# Jenkins n'essaiera pas de les créer, juste de s'y connecter
+services:
+  db_mysql:
+    external: true
+  db_postgres:
+    external: true
+  cache_redis:
+    external: true
+
+# Définit le réseau comme étant externe (créé par l'hôte)
+networks:
+  events_network:
+    external: true
+    name: projet-gestion-evenements_events_network
