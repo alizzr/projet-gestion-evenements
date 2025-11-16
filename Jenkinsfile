@@ -1,4 +1,4 @@
-// Fichier: Jenkinsfile (FINAL Corrigé)
+// Fichier: Jenkinsfile (FINAL Corrigé pour le Token)
 pipeline {
     agent any
 
@@ -23,16 +23,16 @@ pipeline {
 
                     echo "Étape 2b: Lancement de l'analyse SonarQube..."
 
+                    // Cette étape injecte la variable $SONAR_AUTH_TOKEN
                     withSonarQubeEnv('SonarQube') {
-                        // On passe aux guillemets doubles """ pour que ${SONARQUBE_TOKEN} soit interprété
-                        sh """
+                        // On passe aux simples quotes ''' pour que Groovy laisse le $ tranquille
+                        sh '''
                         docker-compose exec -T user_service \
                         /opt/sonar-scanner/bin/sonar-scanner \
                         -Dsonar.host.url=http://sonarqube:9000 \
-                        -Dsonar.login=${SONARQUBE_TOKEN} \
+                        -Dsonar.login=$SONAR_AUTH_TOKEN \
                         -Dsonar.sources=.
-                        """
-                        // J'ai aussi simplifié la commande pour l'instant
+                        '''
                     }
                 }
             }
