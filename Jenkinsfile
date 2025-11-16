@@ -1,4 +1,4 @@
-// Fichier: Jenkinsfile (FINAL - Correction des quotes)
+// Fichier: Jenkinsfile (FINAL - avec withCredentials)
 pipeline {
     agent any
 
@@ -36,14 +36,17 @@ pipeline {
                     sh 'docker-compose -f docker-compose.jenkins.yml exec -T --workdir /var/www user_service php artisan test'
                     
                     echo "Étape 2c: Lancement de l'analyse SonarQube..."
-                    withSonarQubeEnv('SonarQube') {
-                        // --- CORRECTION ICI ---
-                        // On passe aux doubles quotes """ pour que Jenkins remplace $SONAR_AUTH_TOKEN
+                    
+                    // --- CORRECTION FINALE ---
+                    // On n'utilise plus withSonarQubeEnv.
+                    // On utilise withCredentials pour injecter le token dans une variable.
+                    withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN_SECRET')]) {
+                        // On utilise les doubles quotes """ pour que Jenkins remplace ${SONAR_TOKEN_SECRET}
                         sh """
                         docker-compose -f docker-compose.jenkins.yml exec -T --workdir /var/www user_service \
                         /opt/sonar-scanner/bin/sonar-scanner \
                         -Dsonar.host.url=http://sonarqube:9000 \
-                        -Dsonar.login=$SONAR_AUTH_TOKEN \
+                        -Dsonar.login=${SONAR_TOKEN_SECRET} \
                         -Dsonar.sources=.
                         """
                     }
