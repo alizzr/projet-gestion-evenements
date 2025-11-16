@@ -1,15 +1,14 @@
-// Fichier: Jenkinsfile (CORRIGÉ)
+// Fichier: Jenkinsfile (CORRIGÉ AVEC -T)
 pipeline {
     agent any
 
     stages {
         
-        // --- ÉTAPE 1: BUILD (C'est OK) ---
+        // --- ÉTAPE 1: BUILD ---
         stage('Build') {
             steps {
                 script {
                     echo "Étape 1: Construction de l'environnement..."
-                    // C'est bien de reconstruire les images
                     sh 'docker-compose build'
                 }
             }
@@ -20,13 +19,10 @@ pipeline {
             steps {
                 script {
                     echo "Étape 2: Lancement des tests..."
-                    
-                    // ON SUPPRIME LA LIGNE 'docker-compose up -d'
-                    // Les services tournent déjà !
-                    
                     echo "Lancement des tests unitaires et feature..."
-                    // On exécute juste le test sur le service qui tourne
-                    sh 'docker-compose exec user_service php artisan test'
+                    
+                    // Ajout du drapeau -T pour désactiver le TTY
+                    sh 'docker-compose exec -T user_service php artisan test'
                     
                     echo "Lancement de l'analyse SonarQube..."
                     // (futur)
@@ -34,11 +30,7 @@ pipeline {
             }
         }
         
-        // --- ÉTAPE 3: CLEANUP (Supprimé) ---
-        // ON SUPPRIME TOUTE L'ÉTAPE CLEANUP
-        // 'docker-compose down' arrêterait Jenkins lui-même !
-        
-        // --- ÉTAPE 4: RELEASE (C'est OK) ---
+        // --- ÉTAPE 4: RELEASE ---
         stage('Release') {
             steps {
                 script {
