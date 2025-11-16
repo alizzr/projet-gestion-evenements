@@ -1,23 +1,17 @@
-# Fichier: docker-compose.jenkins.yml (Corrigé)
+# Fichier: docker-compose.jenkins.yml (Corrigé - sans volume)
 version: '3.8'
 
 services:
-  # Définit le seul service que Jenkins va gérer
   user_service:
     build:
       context: ./services/user-service
       dockerfile: Dockerfile
-    container_name: user_service_test_app # Nom différent pour éviter les conflits
-    working_dir: /var/www
-    volumes:
-      - ./services/user-service:/var/www
-    # Dit à ce service de rejoindre le réseau externe
+    container_name: user_service_test_app
+    # Le 'working_dir' du Dockerfile est déjà /var/www, donc c'est ok
     networks:
       - events_network
 
-# Définit le réseau comme étant externe (créé par l'hôte)
 networks:
   events_network:
     external: true
-    # C'est le nom que votre PC a donné au réseau
     name: projet-gestion-evenements_events_network

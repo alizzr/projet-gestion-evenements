@@ -44,6 +44,13 @@ USER ${user}
 # Définir le répertoire de travail
 WORKDIR /var/www
 
+# --- CORRECTION ICI ---
+# Copier tout le code (que Jenkins a cloné) DANS l'image
+USER root # On repasse en root pour copier dans /var/www
+COPY . .
+USER ${user} # On re-bascule à l'utilisateur laravel
+# --- FIN DE LA CORRECTION ---
+
 # Exposer le port 9000 pour php-fpm
 EXPOSE 9000
 CMD ["php-fpm"]
