@@ -1,4 +1,4 @@
-# Fichier: services/user-service/Dockerfile (FINAL - avec composer install)
+# Fichier: services/user-service/Dockerfile (FINAL - Ordre corrigé)
 
 # Utiliser une image PHP 8.2 officielle
 FROM php:8.2-fpm
@@ -40,21 +40,17 @@ RUN adduser --shell /bin/bash --uid ${uid} --disabled-password --gecos "" ${user
 # Définir le répertoire de travail
 WORKDIR /var/www
 
-# --- CORRECTION FINALE ---
+# --- CORRECTION FINALE (Ordre) ---
 # On repasse en root pour les permissions
 USER root
 
-# Copier les fichiers de dépendances D'ABORD (pour le cache Docker)
-COPY composer.json composer.lock ./
-
-# Installer les dépendances (en tant que root pour avoir les droits)
-# --no-dev : N'installe pas les paquets de débogage (plus rapide)
-RUN composer install --no-dev --no-interaction --optimize-autoloader
-
-# Copier tout le reste du code
+# 1. Copier TOUT le code d'abord (y compris 'artisan')
 COPY . .
 
-# Donner la propriété de tous les fichiers à notre utilisateur
+# 2. Installer les dépendances (maintenant 'artisan' existe)
+RUN composer install --no-dev --no-interaction --optimize-autoloader
+
+# 3. Donner la propriété de tous les fichiers à notre utilisateur
 RUN chown -R ${user}:${user} .
 
 # Rebasculer à l'utilisateur non-root
