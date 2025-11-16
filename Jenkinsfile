@@ -1,4 +1,4 @@
-// Fichier: Jenkinsfile (FINAL - Ajout de --workdir)
+// Fichier: Jenkinsfile (FINAL - Correction des quotes)
 pipeline {
     agent any
 
@@ -33,21 +33,19 @@ pipeline {
                     sh 'sleep 10'
 
                     echo "Étape 2b: Lancement des tests..."
-                    // --- CORRECTION ICI ---
-                    // On ajoute --workdir /var/www pour dire à exec où lancer la commande
                     sh 'docker-compose -f docker-compose.jenkins.yml exec -T --workdir /var/www user_service php artisan test'
                     
                     echo "Étape 2c: Lancement de l'analyse SonarQube..."
                     withSonarQubeEnv('SonarQube') {
                         // --- CORRECTION ICI ---
-                        // On ajoute --workdir /var/www aussi ici
-                        sh '''
+                        // On passe aux doubles quotes """ pour que Jenkins remplace $SONAR_AUTH_TOKEN
+                        sh """
                         docker-compose -f docker-compose.jenkins.yml exec -T --workdir /var/www user_service \
                         /opt/sonar-scanner/bin/sonar-scanner \
                         -Dsonar.host.url=http://sonarqube:9000 \
                         -Dsonar.login=$SONAR_AUTH_TOKEN \
                         -Dsonar.sources=.
-                        '''
+                        """
                     }
                 }
             }
