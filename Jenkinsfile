@@ -1,9 +1,9 @@
-// Fichier: Jenkinsfile (FINAL - Logique séparée)
+// Fichier: Jenkinsfile (FINAL - Ajout de --workdir)
 pipeline {
     agent any
 
     stages {
-
+        
         // --- ÉTAPE 1: BUILD ---
         stage('Build') {
             steps {
@@ -20,7 +20,6 @@ pipeline {
                 always {
                     script {
                         echo "Étape 2-POST: Arrêt et nettoyage du conteneur de test..."
-                        // 'down' ne détruira que le service défini dans ce fichier
                         sh 'docker-compose -f docker-compose.jenkins.yml down'
                     }
                 }
@@ -34,18 +33,31 @@ pipeline {
                     sh 'sleep 10'
 
                     echo "Étape 2b: Lancement des tests..."
-                    sh 'docker-compose -f docker-compose.jenkins.yml exec -T user_service php artisan test'
-
+                    // --- CORRECTION ICI ---
+                    // On ajoute --workdir /var/www pour dire à exec où lancer la commande
+                    sh 'docker-compose -f docker-compose.jenkins.yml exec -T --workdir /var/www user_service php artisan test'
+                    
                     echo "Étape 2c: Lancement de l'analyse SonarQube..."
                     withSonarQubeEnv('SonarQube') {
+                        // --- CORRECTION ICI ---
+                        // On ajoute --workdir /var/www aussi ici
                         sh '''
-                        docker-compose -f docker-compose.jenkins.yml exec -T user_service \
+                        docker-compose -f docker-compose.jenkins.yml exec -T --workdir /var/www user_service \
                         /opt/sonar-scanner/bin/sonar-scanner \
                         -Dsonar.host.url=http://sonarqube:9000 \
                         -Dsonar.login=$SONAR_AUTH_TOKEN \
                         -Dsonar.sources=.
                         '''
                     }
+                }
+            }
+        }
+        
+        // --- ÉTAPE 3: RELEASE ---
+        stage('Release') {
+            steps {
+                script {
+                    echo "Étape 3: (Futur) Création et push de l'image de production..."
                 }
             }
         }
