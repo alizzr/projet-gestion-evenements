@@ -1,4 +1,4 @@
-# Fichier: services/event-service/Dockerfile (FINAL - avec Composer)
+# Fichier: services/event-service/Dockerfile (FINAL - avec pdo_mysql)
 FROM php:8.2-fpm
 
 ARG user=symfony
@@ -16,13 +16,12 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev \
     libicu-dev
 
-# Installer les extensions PHP
+# --- CORRECTION ICI ---
+# Installer les extensions PHP (ajout de pdo_mysql)
 RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd opcache intl
 
-# --- AJOUTER CE BLOC MANQUANT ---
 # Installer Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-# --- FIN DU BLOC ---
 
 # Installer Sonar-Scanner
 ENV SONAR_SCANNER_VERSION=4.7.0.2747
