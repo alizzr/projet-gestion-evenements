@@ -4,33 +4,7 @@ FROM php:8.2-fpm
 ARG user=symfony
 ARG uid=1001
 
-# Installer les dépendances système
-RUN apt-get update && apt-get install -y \
-    git \
-    curl \
-    zip \
-    unzip \
-    wget \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    libicu-dev # <-- LA LIGNE AJOUTÉE
-
-# Installer les extensions PHP (maintenant 'intl' trouvera libicu)
-RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd opcache intl
-
-# Installer Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-
-# Installer Sonar-Scanner (pour nos futurs tests)
-ENV SONAR_SCANNER_VERSION=4.7.0.2747
-ENV SONAR_SCANNER_HOME=/opt/sonar-scanner
-RUN mkdir -p /opt && \
-    wget -q -O /tmp/sonar-scanner.zip "https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-${SONAR_SCANNER_VERSION}-linux.zip" && \
-    unzip /tmp/sonar-scanner.zip -d /opt && \
-    rm /tmp/sonar-scanner.zip && \
-    mv /opt/sonar-scanner-${SONAR_SCANNER_VERSION}-linux ${SONAR_SCANNER_HOME} && \
-    ln -s ${SONAR_SCANNER_HOME}/bin/sonar-scanner /usr/local/bin/sonar-scanner
+# ... (toutes les installations : apt-get, extensions, sonar-scanner...) ...
 
 # Créer un utilisateur
 RUN adduser --shell /bin/bash --uid ${uid} --disabled-password --gecos "" ${user}
@@ -40,8 +14,14 @@ WORKDIR /var/www
 USER root
 # Copier tout le code
 COPY . .
-# Installer les dépendances (y compris --dev pour les tests)
+
+# Installer les dépendances (composer.json)
 RUN composer install --no-interaction --optimize-autoloader
+
+# --- AJOUTER CETTE LIGNE ---
+# Installer Doctrine (pour que la commande 'doctrine:schema:validate' existe)
+RUN composer require symfony/orm-pack --no-interaction
+# --- FIN DE L'AJOUT ---
 
 # Permissions (Symfony écrit dans var/)
 RUN chown -R ${user}:${user} .
