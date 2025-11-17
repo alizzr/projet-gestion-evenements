@@ -1,13 +1,22 @@
-# Fichier: docker-compose.jenkins.yml (Corrigé - sans volume)
+# Fichier: docker-compose.jenkins.yml (Mis à jour)
 version: '3.8'
 
 services:
+  # Service 1: Laravel
   user_service:
     build:
       context: ./services/user-service
       dockerfile: Dockerfile
     container_name: user_service_test_app
-    # Le 'working_dir' du Dockerfile est déjà /var/www, donc c'est ok
+    networks:
+      - events_network
+
+  # Service 2: Symfony (NOUVEAU)
+  event_service:
+    build:
+      context: ./services/event-service
+      dockerfile: Dockerfile
+    container_name: event_service_test_app
     networks:
       - events_network
 
