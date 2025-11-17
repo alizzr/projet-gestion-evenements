@@ -9,7 +9,7 @@ services:
     container_name: mysql_events
     restart: unless-stopped
     environment:
-      MYSQL_DATABASE: db_events_main,db_sonar
+      MYSQL_DATABASE: db_events_main,db_sonar,db_events
       MYSQL_USER: user
       MYSQL_PASSWORD: password
       MYSQL_ROOT_PASSWORD: root_password
@@ -59,6 +59,22 @@ services:
     volumes:
       - jenkins_data:/var/jenkins_home
       - //var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - events_network
+
+# --- Service Événements (Symfony) ---
+  event_service:
+    build:
+      context: ./services/event-service
+      dockerfile: Dockerfile
+    container_name: event_service_app
+    restart: unless-stopped
+    working_dir: /var/www
+    # On le démarre pour que Jenkins puisse le tester
+    command: php-fpm
+    depends_on:
+      - db_mysql
+      - cache_redis
     networks:
       - events_network
 
