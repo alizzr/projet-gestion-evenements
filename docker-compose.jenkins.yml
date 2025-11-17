@@ -1,4 +1,4 @@
-# Fichier: docker-compose.jenkins.yml (Mis à jour)
+# Fichier: docker-compose.jenkins.yml (Corrigé avec les variables d'environnement)
 version: '3.8'
 
 services:
@@ -10,8 +10,18 @@ services:
     container_name: user_service_test_app
     networks:
       - events_network
+    # --- AJOUTÉ : Configuration pour les tests Laravel ---
+    environment:
+      - APP_KEY=base64:IgYfA8Xz1lUUQPItd/y/G9J0A9m9fP9hK/T2h/u3N8Y=
+      - DB_CONNECTION=mysql
+      - DB_HOST=db_mysql
+      - DB_DATABASE=db_events_main
+      - DB_USERNAME=user
+      - DB_PASSWORD=password
+      - CACHE_DRIVER=array
+      - SESSION_DRIVER=array
 
-  # Service 2: Symfony (NOUVEAU)
+  # Service 2: Symfony
   event_service:
     build:
       context: ./services/event-service
@@ -19,6 +29,10 @@ services:
     container_name: event_service_test_app
     networks:
       - events_network
+    # --- AJOUTÉ : Configuration pour les tests Symfony ---
+    environment:
+      # C'est la variable que Symfony lit
+      - DATABASE_URL=mysql://user:password@db_mysql:3306/db_events?serverVersion=8.0
 
 networks:
   events_network:

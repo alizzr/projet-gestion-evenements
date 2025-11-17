@@ -17,6 +17,8 @@ pipeline {
             }
         }
 
+       // ... (gardez les étapes Build et Checkout) ...
+
         // --- ÉTAPE 2: TEST & ANALYSIS (Laravel) ---
         stage('Test & Analysis: user-service (Laravel)') {
             post {
@@ -33,6 +35,10 @@ pipeline {
                     sh 'docker-compose -f docker-compose.jenkins.yml up -d user_service'
                     echo "Attente de 10s..."
                     sh 'sleep 10'
+
+                    // --- AJOUTÉ : Vider le cache pour lire les nouvelles variables ---
+                    echo "Nettoyage du cache de configuration Laravel..."
+                    sh 'docker-compose -f docker-compose.jenkins.yml exec -T --workdir /var/www user_service php artisan config:clear'
 
                     echo "Lancement des tests Laravel..."
                     sh 'docker-compose -f docker-compose.jenkins.yml exec -T --workdir /var/www user_service php artisan test'
@@ -51,6 +57,7 @@ pipeline {
                 }
             }
         }
+// ... (gardez le reste du Jenkinsfile, l'étape Symfony est déjà correcte) ...
 
         // --- ÉTAPE 3: TEST & ANALYSIS (Symfony) ---
         stage('Test & Analysis: event-service (Symfony)') {
