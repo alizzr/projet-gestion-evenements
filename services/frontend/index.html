@@ -2,63 +2,88 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Gestion Événements - Microservices</title>
+    <title>Projet Gestion Événements - Démo</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { background-color: #f8f9fa; padding-top: 50px; }
-        .service-card { margin-bottom: 20px; transition: transform 0.3s; }
-        .service-card:hover { transform: translateY(-5px); }
-        .status-dot { height: 10px; width: 10px; background-color: #28a745; border-radius: 50%; display: inline-block; }
+        body { background-color: #f0f2f5; padding-top: 20px; }
+        .card { margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .log-box { background: #2d3436; color: #00cec9; padding: 15px; border-radius: 5px; height: 200px; overflow-y: scroll; font-family: monospace; font-size: 12px; }
+        .api-url { font-size: 0.8em; color: #636e72; }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="text-center mb-5">
-            <h1 class="display-4">Architecture Microservices</h1>
-            <p class="lead">Application de Gestion d'Événements</p>
+        <h2 class="text-center mb-4">Architecture Microservices - Interface de Démo</h2>
+        
+        <div class="row mb-4">
+            <div class="col-12">
+                <h6>Console de Communication (Logs des API)</h6>
+                <div id="console-log" class="log-box">Prêt...</div>
+            </div>
         </div>
 
         <div class="row">
-            <div class="col-md-6">
-                <div class="card service-card border-primary">
-                    <div class="card-header bg-primary text-white">Service Utilisateur (Laravel)</div>
+            <div class="col-md-4">
+                <div class="card border-primary">
+                    <div class="card-header bg-primary text-white">1. Utilisateur (Laravel)</div>
                     <div class="card-body">
-                        <p>Gère l'authentification et les profils.</p>
-                        <button onclick="testUser()" class="btn btn-outline-primary btn-sm">Tester API</button>
-                        <div id="user-result" class="mt-2 text-muted small"></div>
+                        <p class="api-url">http://localhost:8081/api/users</p>
+                        
+                        <h6>Inscription Rapide</h6>
+                        <div class="input-group mb-2">
+                            <input type="text" id="reg-name" class="form-control form-control-sm" placeholder="Nom" value="Ali">
+                            <input type="email" id="reg-email" class="form-control form-control-sm" placeholder="Email" value="ali@test.com">
+                        </div>
+                        <button onclick="register()" class="btn btn-sm btn-outline-primary w-100 mb-3">Créer Compte</button>
+
+                        <h6>Connexion</h6>
+                        <div class="input-group mb-2">
+                            <input type="email" id="login-email" class="form-control form-control-sm" placeholder="Email" value="ali@test.com">
+                        </div>
+                        <button onclick="login()" class="btn btn-sm btn-primary w-100">Se connecter</button>
+                        <div id="auth-status" class="mt-2 text-success small fw-bold"></div>
                     </div>
                 </div>
             </div>
 
-            <div class="col-md-6">
-                <div class="card service-card border-success">
-                    <div class="card-header bg-success text-white">Service Événements (Symfony)</div>
+            <div class="col-md-4">
+                <div class="card border-success">
+                    <div class="card-header bg-success text-white">2. Événements (Symfony)</div>
                     <div class="card-body">
-                        <p>Gère le catalogue des événements.</p>
-                        <button onclick="testEvent()" class="btn btn-outline-success btn-sm">Tester API</button>
-                        <div id="event-result" class="mt-2 text-muted small"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
+                        <p class="api-url">http://localhost:8081/api/events</p>
+                        
+                        <h6>Créer Événement (Admin)</h6>
+                        <div class="input-group mb-2">
+                            <input type="text" id="evt-name" class="form-control form-control-sm" placeholder="Concert, Conférence..." value="Concert Rock">
+                            <input type="date" id="evt-date" class="form-control form-control-sm" value="2023-12-31">
+                        </div>
+                        <button onclick="createEvent()" class="btn btn-sm btn-outline-success w-100 mb-3">Ajouter</button>
 
-        <div class="row mt-4">
-            <div class="col-md-6">
-                <div class="card service-card border-warning">
-                    <div class="card-header bg-warning text-dark">Service Réservation (PHP Natif)</div>
-                    <div class="card-body">
-                        <p>Gère les paiements (Simulés).</p>
-                        <span class="badge bg-success">Actif</span>
+                        <h6>Liste des Événements</h6>
+                        <button onclick="listEvents()" class="btn btn-sm btn-success w-100">Rafraîchir Liste</button>
+                        <ul id="events-list" class="list-group mt-2 small"></ul>
                     </div>
                 </div>
             </div>
 
-            <div class="col-md-6">
-                <div class="card service-card border-info">
-                    <div class="card-header bg-info text-white">Service Notification (PHP Natif)</div>
+            <div class="col-md-4">
+                <div class="card border-warning">
+                    <div class="card-header bg-warning text-dark">3 & 4. Réservation & Notif</div>
                     <div class="card-body">
-                        <p>Envoi d'emails de confirmation.</p>
-                        <span class="badge bg-success">Actif</span>
+                        <p class="api-url">API Gateway -> PHP Native</p>
+                        <p class="small text-muted">Sélectionnez un événement dans la liste (colonne 2) pour activer la réservation.</p>
+                        
+                        <div id="reservation-form" style="display:none; border: 1px dashed orange; padding: 10px;">
+                            <h6>Réserver : <span id="selected-event-name"></span></h6>
+                            <input type="hidden" id="selected-event-id">
+                            <button onclick="makeReservation()" class="btn btn-sm btn-warning w-100">Payer & Réserver (Stripe Simu)</button>
+                        </div>
+
+                        <hr>
+                        <div id="notification-area" class="alert alert-info d-none">
+                            <strong>Email reçu !</strong><br>
+                            <span id="notif-content"></span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -66,19 +91,144 @@
     </div>
 
     <script>
-        // Test simple via l'API Gateway
-        async function testUser() {
+        const GATEWAY = 'http://localhost:8081'; // Port défini dans docker-compose
+        let currentUserToken = null;
+        let currentUserId = 1; // Simulé
+
+        function log(service, msg, data = null) {
+            const box = document.getElementById('console-log');
+            const time = new Date().toLocaleTimeString();
+            let html = `<div><span style="color: #74b9ff">[${time}] ${service}:</span> ${msg}</div>`;
+            if(data) html += `<div style="color: #aaa; margin-left: 15px;">> ${JSON.stringify(data)}</div>`;
+            box.innerHTML = html + box.innerHTML;
+        }
+
+        // --- 1. UTILISATEUR (LARAVEL) ---
+        async function register() {
+            const name = document.getElementById('reg-name').value;
+            const email = document.getElementById('reg-email').value;
+            // Password hardcodé pour aller vite
             try {
-                // On tape sur la Gateway qui redirige vers le microservice
-                const response = await fetch('http://localhost:8081/api/users/test'); 
-                document.getElementById('user-result').innerText = "Statut: Connecté à l'API Gateway";
-            } catch (e) {
-                document.getElementById('user-result').innerText = "Erreur de connexion (CORS ou Réseau)";
+                const res = await fetch(`${GATEWAY}/api/users/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, password: 'password123' })
+                });
+                const data = await res.json();
+                log('Laravel', 'Tentative Inscription', data);
+                if(res.ok) alert('Compte créé ! Vous pouvez vous connecter.');
+            } catch (e) { log('Erreur', 'Laravel injoignable', e); }
+        }
+
+        async function login() {
+            const email = document.getElementById('login-email').value;
+            try {
+                const res = await fetch(`${GATEWAY}/api/users/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password: 'password123' })
+                });
+                const data = await res.json();
+                log('Laravel', 'Connexion', data);
+                
+                if (res.ok) {
+                    currentUserToken = data.token;
+                    document.getElementById('auth-status').innerText = "Connecté ✅ (Token reçu)";
+                    // On charge les événements auto
+                    listEvents();
+                } else {
+                    alert('Erreur login: ' + data.message);
+                }
+            } catch (e) { log('Erreur', 'Laravel injoignable', e); }
+        }
+
+        // --- 2. ÉVÉNEMENTS (SYMFONY) ---
+        async function createEvent() {
+            const name = document.getElementById('evt-name').value;
+            const date = document.getElementById('evt-date').value;
+            
+            try {
+                const res = await fetch(`${GATEWAY}/api/events`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, date })
+                });
+                const data = await res.json();
+                log('Symfony', 'Création Event', data);
+                listEvents();
+            } catch (e) { log('Erreur', 'Symfony injoignable', e); }
+        }
+
+        async function listEvents() {
+            try {
+                const res = await fetch(`${GATEWAY}/api/events`);
+                const data = await res.json();
+                log('Symfony', 'Liste Events', data);
+                
+                const list = document.getElementById('events-list');
+                list.innerHTML = '';
+                data.forEach(evt => {
+                    list.innerHTML += `
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            ${evt.name} (${evt.date})
+                            <button class="btn btn-xs btn-info" onclick="selectEvent(${evt.id}, '${evt.name}')">Choisir</button>
+                        </li>`;
+                });
+            } catch (e) { 
+                log('Erreur', 'Symfony injoignable. Avez-vous créé des événements ?', e); 
+                // Mock pour démo si vide
+                if(document.getElementById('events-list').innerHTML === '') {
+                     log('Info', 'Aucun événement trouvé, création fictive pour l\'interface...');
+                     // createEvent(); // Auto create
+                }
             }
         }
 
-        function testEvent() {
-             document.getElementById('event-result').innerText = "Appel API simulé vers Symfony...";
+        function selectEvent(id, name) {
+            document.getElementById('reservation-form').style.display = 'block';
+            document.getElementById('selected-event-name').innerText = name;
+            document.getElementById('selected-event-id').value = id;
+        }
+
+        // --- 3. RÉSERVATION (PHP PUR) ---
+        async function makeReservation() {
+            const eventId = document.getElementById('selected-event-id').value;
+            
+            log('Réservation', 'Envoi au service de paiement Stripe (Simulé)...');
+            
+            try {
+                const res = await fetch(`${GATEWAY}/api/reservations`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ event_id: eventId, user_id: currentUserId })
+                });
+                const data = await res.json();
+                log('Réservation', 'Réponse Paiement', data);
+
+                if (data.status === 'CONFIRMED') {
+                    sendNotification("Confirmation: Votre place pour l'événement #" + eventId + " est réservée. Transaction: " + data.transaction_id);
+                }
+            } catch (e) { log('Erreur', 'Service Réservation HS', e); }
+        }
+
+        // --- 4. NOTIFICATION (PHP PUR) ---
+        async function sendNotification(message) {
+            const email = document.getElementById('login-email').value;
+            
+            try {
+                const res = await fetch(`${GATEWAY}/api/notifications`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: email, message: message })
+                });
+                const data = await res.json();
+                log('Notification', 'Envoi Email', data);
+                
+                const alertBox = document.getElementById('notification-area');
+                alertBox.classList.remove('d-none');
+                document.getElementById('notif-content').innerText = `À: ${data.recipient} - Msg: ${message}`;
+                
+            } catch (e) { log('Erreur', 'Service Notification HS', e); }
         }
     </script>
 </body>
