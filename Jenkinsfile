@@ -12,12 +12,13 @@ pipeline {
             }
         }
 
-        // --- 2. TEST BACKEND (Laravel) ---
+       // --- 2. TEST BACKEND (Laravel) ---
         stage('Test Backend: Laravel') {
             post { always { sh 'docker-compose -f docker-compose.jenkins.yml down' } }
             steps {
                 script {
-                    sh 'docker-compose -f docker-compose.jenkins.yml up -d user_service'
+                    // AJOUT DE --force-recreate --remove-orphans POUR CORRIGER LE BUG KeyError
+                    sh 'docker-compose -f docker-compose.jenkins.yml up -d --force-recreate --remove-orphans user_service'
                     sh 'sleep 10'
                     sh 'docker-compose -f docker-compose.jenkins.yml exec -T --workdir /var/www user_service php artisan config:clear'
                     sh 'docker-compose -f docker-compose.jenkins.yml exec -T --workdir /var/www user_service php artisan test'
