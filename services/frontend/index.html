@@ -3,84 +3,95 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EventMaster - Application Complète</title>
+    <title>EventMaster - Gestion Complète</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
     <style>
-        body { background-color: #f8f9fa; }
-        .action-btn { cursor: pointer; transition: 0.2s; }
-        .action-btn:hover { transform: scale(1.1); }
+        body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .card { border: none; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .btn-action { width: 35px; height: 35px; padding: 0; line-height: 35px; border-radius: 50%; }
+        .header-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem 0; margin-bottom: 2rem; }
     </style>
 </head>
 <body>
 
-    <nav class="navbar navbar-dark bg-dark mb-4">
-        <div class="container">
-            <a class="navbar-brand" href="#"><i class="fa-solid fa-layer-group"></i> EventMaster Pro</a>
-            <div class="d-flex">
-                <span class="text-white me-3 align-self-center" id="user-display">Invité</span>
-                <button onclick="logout()" class="btn btn-outline-light btn-sm" id="logout-btn" style="display:none;">Déconnexion</button>
+    <div class="header-bg shadow-sm">
+        <div class="container d-flex justify-content-between align-items-center">
+            <h1 class="h3 mb-0"><i class="fa-solid fa-calendar-check me-2"></i> EventMaster</h1>
+            <div id="user-panel" class="d-none">
+                <span class="me-3"><i class="fa-solid fa-user me-1"></i> <span id="user-email" class="fw-bold"></span></span>
+                <button onclick="logout()" class="btn btn-sm btn-light text-primary fw-bold">Déconnexion</button>
             </div>
         </div>
-    </nav>
+    </div>
 
     <div class="container">
         
-        <div id="login-section" class="row justify-content-center">
+        <div id="login-view" class="row justify-content-center">
             <div class="col-md-5">
-                <div class="card shadow">
-                    <div class="card-header bg-primary text-white">Connexion Utilisateur</div>
-                    <div class="card-body">
+                <div class="card p-4">
+                    <h4 class="text-center mb-4 text-primary">Connexion</h4>
+                    <form onsubmit="event.preventDefault(); login();">
                         <div class="mb-3">
                             <label>Email</label>
-                            <input type="email" id="login-email" class="form-control" value="ali@test.com">
+                            <input type="email" id="login-email" class="form-control" value="admin@test.com">
                         </div>
                         <div class="mb-3">
                             <label>Mot de passe</label>
                             <input type="password" id="login-pass" class="form-control" value="password">
                         </div>
-                        <button onclick="login()" class="btn btn-primary w-100">Se connecter via Laravel</button>
+                        <button type="submit" class="btn btn-primary w-100 py-2">Se connecter (Via Laravel)</button>
+                    </form>
+                    <div class="text-center mt-3 text-muted small">
+                        Microservice Utilisateur
                     </div>
                 </div>
             </div>
         </div>
 
-        <div id="app-section" style="display:none;">
+        <div id="app-view" class="d-none">
             
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h2><i class="fa-regular fa-calendar-days"></i> Gestion des Événements</h2>
-                <button class="btn btn-success" onclick="openModal()"><i class="fa-solid fa-plus"></i> Nouvel Événement</button>
-            </div>
-
-            <div class="card shadow">
-                <div class="card-body p-0">
-                    <table class="table table-striped table-hover mb-0">
-                        <thead class="table-dark">
-                            <tr>
-                                <th>ID</th>
-                                <th>Nom de l'événement</th>
-                                <th>Date</th>
-                                <th class="text-end">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="events-table">
-                            </tbody>
-                    </table>
-                </div>
-            </div>
-            
-            <hr class="my-5">
-
-            <div class="row">
+            <div class="row mb-4">
                 <div class="col-md-12">
-                    <div class="alert alert-warning">
-                        <h4><i class="fa-solid fa-credit-card"></i> Zone Utilisateur (Réservation)</h4>
-                        <p>Sélectionnez un événement ci-dessus pour simuler une réservation et recevoir une notification.</p>
-                        <div id="reservation-log" class="bg-white p-2 border rounded text-muted small">En attente d'action...</div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h3>Liste des Événements</h3>
+                        <button class="btn btn-success shadow-sm" onclick="openCreateModal()">
+                            <i class="fa-solid fa-plus me-2"></i> Créer un Événement
+                        </button>
                     </div>
                 </div>
             </div>
+
+            <div class="card mb-5">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-4">ID</th>
+                                    <th>Nom de l'événement</th>
+                                    <th>Date</th>
+                                    <th class="text-end pe-4">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="events-table-body">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card bg-dark text-light">
+                <div class="card-header bg-secondary text-white border-0">
+                    <i class="fa-solid fa-terminal me-2"></i> Logs des Microservices (Temps réel)
+                </div>
+                <div class="card-body" style="height: 150px; overflow-y: auto;" id="system-logs">
+                    <div class="text-success">> Système prêt.</div>
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -94,17 +105,17 @@
                 <div class="modal-body">
                     <input type="hidden" id="evt-id">
                     <div class="mb-3">
-                        <label>Nom</label>
-                        <input type="text" id="evt-name" class="form-control">
+                        <label>Nom de l'événement</label>
+                        <input type="text" id="evt-name" class="form-control" required>
                     </div>
                     <div class="mb-3">
                         <label>Date</label>
-                        <input type="date" id="evt-date" class="form-control">
+                        <input type="date" id="evt-date" class="form-control" required>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                    <button type="button" class="btn btn-primary" onclick="saveEvent()">Enregistrer (Symfony)</button>
+                    <button type="button" class="btn btn-primary" onclick="saveEvent()">Sauvegarder</button>
                 </div>
             </div>
         </div>
@@ -112,132 +123,191 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        const API = 'http://localhost:8081/api';
-        let modal;
+        const API_GATEWAY = 'http://localhost:8081/api';
+        let eventModal;
 
         document.addEventListener('DOMContentLoaded', () => {
-            modal = new bootstrap.Modal(document.getElementById('eventModal'));
+            eventModal = new bootstrap.Modal(document.getElementById('eventModal'));
         });
 
-        // --- 1. LOGIN (LARAVEL) ---
+        function log(service, message) {
+            const box = document.getElementById('system-logs');
+            const time = new Date().toLocaleTimeString();
+            const color = service === 'Laravel' ? '#ff7675' : service === 'Symfony' ? '#55efc4' : '#ffeaa7';
+            box.innerHTML = `<div><span style="color:${color}">[${service}]</span> ${time} - ${message}</div>` + box.innerHTML;
+        }
+
+        // --- LARAVEL : LOGIN ---
         async function login() {
             const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-pass').value;
+
             try {
-                const res = await fetch(`${API}/users/login`, {
+                // Appel API Gateway -> Laravel
+                const res = await fetch(`${API_GATEWAY}/users/login`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ email, password: 'password' })
+                    body: JSON.stringify({ email, password })
                 });
-                if(res.ok) {
-                    document.getElementById('login-section').style.display = 'none';
-                    document.getElementById('app-section').style.display = 'block';
-                    document.getElementById('logout-btn').style.display = 'block';
-                    document.getElementById('user-display').innerText = email;
-                    loadEvents(); // Charger la liste
-                    Swal.fire('Connecté', 'Authentification Laravel réussie', 'success');
+                
+                const data = await res.json();
+                log('Laravel', `Réponse Auth: ${res.status}`);
+
+                if (res.ok) {
+                    document.getElementById('login-view').classList.add('d-none');
+                    document.getElementById('app-view').classList.remove('d-none');
+                    document.getElementById('user-panel').classList.remove('d-none');
+                    document.getElementById('user-email').innerText = email;
+                    loadEvents(); // Charger la liste depuis Symfony
+                    Swal.fire({ icon: 'success', title: 'Connecté', text: 'Authentifié via Laravel User Service', timer: 1500, showConfirmButton: false });
                 } else {
-                    Swal.fire('Erreur', 'Login refusé par Laravel', 'error');
+                    Swal.fire('Erreur', data.message || 'Échec connexion', 'error');
                 }
-            } catch(e) { Swal.fire('Erreur Réseau', 'API injoignable', 'error'); }
+            } catch (e) {
+                Swal.fire('Erreur Système', 'Impossible de joindre l\'API Gateway', 'error');
+            }
         }
 
         function logout() {
             location.reload();
         }
 
-        // --- 2. CRUD ÉVÉNEMENTS (SYMFONY) ---
+        // --- SYMFONY : LIST (GET) ---
         async function loadEvents() {
-            const res = await fetch(`${API}/events`);
-            const events = await res.json();
-            const tbody = document.getElementById('events-table');
-            tbody.innerHTML = '';
-
-            events.forEach(evt => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td>#${evt.id}</td>
-                        <td><strong>${evt.name}</strong></td>
-                        <td>${evt.date}</td>
-                        <td class="text-end">
-                            <button class="btn btn-sm btn-warning me-2" onclick="book('${evt.id}', '${evt.name}')">Réserver</button>
-                            <button class="btn btn-sm btn-info me-2" onclick="edit('${evt.id}', '${evt.name}', '${evt.date}')"><i class="fa-solid fa-pen"></i></button>
-                            <button class="btn btn-sm btn-danger" onclick="del(${evt.id})"><i class="fa-solid fa-trash"></i></button>
-                        </td>
-                    </tr>
-                `;
-            });
+            try {
+                const res = await fetch(`${API_GATEWAY}/events`);
+                const events = await res.json();
+                log('Symfony', `Récupération ${events.length} événements`);
+                
+                const tbody = document.getElementById('events-table-body');
+                tbody.innerHTML = '';
+                
+                events.forEach(evt => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td class="ps-4 text-muted">#${evt.id}</td>
+                            <td class="fw-bold">${evt.name}</td>
+                            <td><span class="badge bg-light text-dark border">${evt.date}</span></td>
+                            <td class="text-end pe-4">
+                                <button class="btn btn-warning btn-sm me-2" onclick="reserve(${evt.id}, '${evt.name}')">
+                                    <i class="fa-solid fa-ticket"></i> Réserver
+                                </button>
+                                <button class="btn btn-light btn-action text-primary" onclick="editEvent(${evt.id}, '${evt.name}', '${evt.date}')">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
+                                <button class="btn btn-light btn-action text-danger" onclick="deleteEvent(${evt.id})">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } catch (e) { log('Erreur', 'Échec chargement événements'); }
         }
 
-        function openModal() {
+        // --- SYMFONY : CREATE / UPDATE ---
+        function openCreateModal() {
             document.getElementById('evt-id').value = '';
             document.getElementById('evt-name').value = '';
             document.getElementById('evt-date').value = '';
-            document.getElementById('modalTitle').innerText = "Nouvel Événement";
-            modal.show();
+            document.getElementById('modalTitle').innerText = "Ajouter un événement";
+            eventModal.show();
         }
 
-        // CREER OU MODIFIER
+        function editEvent(id, name, date) {
+            document.getElementById('evt-id').value = id;
+            document.getElementById('evt-name').value = name;
+            document.getElementById('evt-date').value = date;
+            document.getElementById('modalTitle').innerText = "Modifier événement #" + id;
+            eventModal.show();
+        }
+
         async function saveEvent() {
             const id = document.getElementById('evt-id').value;
             const name = document.getElementById('evt-name').value;
             const date = document.getElementById('evt-date').value;
             
             const method = id ? 'PUT' : 'POST';
-            const url = id ? `${API}/events/${id}` : `${API}/events`;
+            const url = id ? `${API_GATEWAY}/events/${id}` : `${API_GATEWAY}/events`;
 
-            await fetch(url, {
-                method: method,
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ name, date })
+            try {
+                const res = await fetch(url, {
+                    method: method,
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ name, date })
+                });
+                
+                if(res.ok) {
+                    log('Symfony', `Sauvegarde événement (ID: ${id || 'New'})`);
+                    eventModal.hide();
+                    loadEvents();
+                    Swal.fire('Succès', 'Données enregistrées', 'success');
+                }
+            } catch(e) { Swal.fire('Erreur', 'Erreur API Symfony', 'error'); }
+        }
+
+        // --- SYMFONY : DELETE ---
+        async function deleteEvent(id) {
+            const result = await Swal.fire({
+                title: 'Supprimer ?',
+                text: "Cette action est irréversible.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                confirmButtonText: 'Oui, supprimer'
             });
 
-            modal.hide();
-            loadEvents();
-            Swal.fire('Sauvegardé', 'Données enregistrées par Symfony', 'success');
-        }
-
-        // PRÉ-REMPLIR MODAL (POUR MODIF)
-        window.edit = function(id, name, date) {
-            document.getElementById('evt-id').value = id;
-            document.getElementById('evt-name').value = name;
-            document.getElementById('evt-date').value = date;
-            document.getElementById('modalTitle').innerText = "Modifier Événement #" + id;
-            modal.show();
-        }
-
-        // SUPPRIMER
-        window.del = async function(id) {
-            if(confirm('Confirmer la suppression ?')) {
-                await fetch(`${API}/events/${id}`, { method: 'DELETE' });
-                loadEvents();
-                Swal.fire('Supprimé', 'Événement supprimé de la BDD', 'info');
+            if (result.isConfirmed) {
+                try {
+                    await fetch(`${API_GATEWAY}/events/${id}`, { method: 'DELETE' });
+                    log('Symfony', `Suppression événement #${id}`);
+                    loadEvents();
+                    Swal.fire('Supprimé!', 'L\'événement a été effacé.', 'success');
+                } catch(e) { Swal.fire('Erreur', 'Impossible de supprimer', 'error'); }
             }
         }
 
-        // --- 3. RESERVATION & NOTIFICATION ---
-        window.book = async function(id, name) {
-            const log = document.getElementById('reservation-log');
-            log.innerHTML = `⏳ 1. Envoi demande de paiement pour "${name}" (PHP Pur)...`;
-            
-            // Paiement
-            const res1 = await fetch(`${API}/reservations`, {
-                method: 'POST',
-                body: JSON.stringify({ event_id: id, user_id: 1 })
+        // --- PHP NATIF : RESERVATION & NOTIFICATION ---
+        async function reserve(id, name) {
+            const { value: email } = await Swal.fire({
+                title: 'Réserver une place',
+                input: 'email',
+                inputLabel: `Pour : ${name}`,
+                inputPlaceholder: 'Entrez votre email',
+                inputValue: document.getElementById('user-email').innerText,
+                showCancelButton: true,
+                confirmButtonText: 'Payer & Confirmer'
             });
-            const data1 = await res1.json();
-            
-            log.innerHTML += `<br>✅ 2. Paiement validé : ${data1.transaction_id}`;
-            log.innerHTML += `<br>⏳ 3. Envoi notification email (PHP Pur)...`;
 
-            // Notification
-            const res2 = await fetch(`${API}/notifications`, {
-                method: 'POST',
-                body: JSON.stringify({ email: 'ali@test.com', message: 'Billet confirmé' })
-            });
-            const data2 = await res2.json();
+            if (email) {
+                Swal.fire({ title: 'Traitement...', didOpen: () => Swal.showLoading() });
+                
+                // 1. Appel Service Réservation (PHP)
+                try {
+                    const resResa = await fetch(`${API_GATEWAY}/reservations`, {
+                        method: 'POST',
+                        body: JSON.stringify({ event_id: id, user_id: 1 })
+                    });
+                    const dataResa = await resResa.json();
+                    log('Réservation', `Paiement Stripe OK - Transaction: ${dataResa.transaction_id}`);
 
-            log.innerHTML += `<br>📧 4. Email envoyé : ${data2.status}`;
-            Swal.fire('Réservé !', 'Paiement et Email confirmés.', 'success');
+                    // 2. Appel Service Notification (PHP)
+                    const resNotif = await fetch(`${API_GATEWAY}/notifications`, {
+                        method: 'POST',
+                        body: JSON.stringify({ email: email, message: `Confirmation billet pour ${name}` })
+                    });
+                    log('Notification', `Email envoyé à ${email}`);
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Réservation Validée !',
+                        html: `Paiement accepté.<br>Notification envoyée par le service dédié.`
+                    });
+
+                } catch(e) {
+                    Swal.fire('Erreur', 'La chaîne de microservices a rencontré un problème.', 'error');
+                }
+            }
         }
     </script>
 </body>
