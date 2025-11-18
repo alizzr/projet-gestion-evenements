@@ -1,30 +1,31 @@
 <?php
-// Fichier: services/reservation-service/src/index.php
-header('Content-Type: application/json');
+header("Access-Control-Allow-Origin: *");
+header("Content-Type: application/json; charset=UTF-8");
 
+// Routeur basique
 $method = $_SERVER['REQUEST_METHOD'];
+$input = json_decode(file_get_contents('php://input'), true);
 
 if ($method === 'POST') {
-    // Simulation de traitement de paiement (Stripe Sandbox)
-    $paymentStatus = 'success'; 
-    $transactionId = 'txn_' . bin2hex(random_bytes(10));
+    // Simulation de paiement
+    $eventId = $input['event_id'] ?? 0;
+    
+    // Simulation d'appel API Stripe
+    // ... traitement ...
+    $success = true;
 
-    echo json_encode([
-        'status' => 'success',
-        'message' => 'Reservation confirmee',
-        'payment_provider' => 'Stripe (Simulation)',
-        'transaction_id' => $transactionId,
-        'data' => [
-            'event_id' => 123,
-            'user_id' => 456,
-            'seats' => 2
-        ]
-    ]);
+    if ($success) {
+        echo json_encode([
+            "status" => "CONFIRMED",
+            "message" => "Paiement Stripe validé",
+            "transaction_id" => "txn_" . uniqid(),
+            "event_id" => $eventId
+        ]);
+    } else {
+        http_response_code(400);
+        echo json_encode(["status" => "FAILED", "message" => "Paiement refusé"]);
+    }
 } else {
-    echo json_encode([
-        'status' => 'ready',
-        'service' => 'Reservation Microservice (PHP Native)',
-        'version' => '1.0'
-    ]);
+    echo json_encode(["message" => "Service Réservation (PHP Natif) en ligne"]);
 }
 ?>
