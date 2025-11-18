@@ -2,21 +2,19 @@ pipeline {
     agent any
 
     stages {
-        // --- 1. BUILD TOUS LES SERVICES ---
-        stage('Build All Services') {
+        // --- CONSTRUCTION GLOBALE ---
+        stage('Build All Microservices') {
             steps {
                 script {
-                    sh 'docker-compose -f docker-compose.jenkins.yml build user_service'
-                    sh 'docker-compose -f docker-compose.jenkins.yml build event_service'
-                    sh 'docker-compose -f docker-compose.jenkins.yml build reservation_service'
-                    sh 'docker-compose -f docker-compose.jenkins.yml build notification_service'
+                    echo "Construction des 4 microservices..."
+                    sh 'docker-compose -f docker-compose.jenkins.yml build'
                 }
             }
         }
 
-        // --- 2. TEST LARAVEL ---
-        stage('Test User Service (Laravel)') {
-            post { always { sh 'docker-compose -f docker-compose.jenkins.yml down' } }
+        // --- SERVICE 1: LARAVEL ---
+        stage('Test: User Service (Laravel)') {
+            post { always { sh 'docker-compose -f docker-compose.jenkins.yml stop user_service && docker-compose -f docker-compose.jenkins.yml rm -f user_service' } }
             steps {
                 script {
                     sh 'docker-compose -f docker-compose.jenkins.yml up -d user_service'
@@ -27,40 +25,41 @@ pipeline {
             }
         }
 
-        // --- 3. TEST SYMFONY ---
-        stage('Test Event Service (Symfony)') {
-            post { always { sh 'docker-compose -f docker-compose.jenkins.yml down' } }
+        // --- SERVICE 2: SYMFONY ---
+        stage('Test: Event Service (Symfony)') {
+            post { always { sh 'docker-compose -f docker-compose.jenkins.yml stop event_service && docker-compose -f docker-compose.jenkins.yml rm -f event_service' } }
             steps {
                 script {
                     sh 'docker-compose -f docker-compose.jenkins.yml up -d event_service'
                     sh 'sleep 10'
+                    // Validation du schéma BDD
                     sh 'docker-compose -f docker-compose.jenkins.yml exec -T --workdir /var/www event_service php bin/console doctrine:schema:validate'
                 }
             }
         }
 
-        // --- 4. TEST RESERVATION (PHP Pur) ---
-        stage('Test Reservation Service') {
-            post { always { sh 'docker-compose -f docker-compose.jenkins.yml down' } }
+        // --- SERVICE 3: RÉSERVATION ---
+        stage('Test: Reservation Service (PHP Native)') {
+            post { always { sh 'docker-compose -f docker-compose.jenkins.yml stop reservation_service && docker-compose -f docker-compose.jenkins.yml rm -f reservation_service' } }
             steps {
                 script {
                     sh 'docker-compose -f docker-compose.jenkins.yml up -d reservation_service'
                     sh 'sleep 5'
-                    // Test simple : on vérifie que le fichier index.php existe et est lisible
-                    sh 'docker-compose -f docker-compose.jenkins.yml exec -T reservation_service ls -la /var/www/html/index.php'
+                    // Vérification de syntaxe PHP (Lint)
+                    sh 'docker-compose -f docker-compose.jenkins.yml exec -T reservation_service php -l /app/src/index.php'
                 }
             }
         }
 
-        // --- 5. TEST NOTIFICATION ---
-        stage('Test Notification Service') {
-            post { always { sh 'docker-compose -f docker-compose.jenkins.yml down' } }
+        // --- SERVICE 4: NOTIFICATION ---
+        stage('Test: Notification Service (PHP Native)') {
+            post { always { sh 'docker-compose -f docker-compose.jenkins.yml stop notification_service && docker-compose -f docker-compose.jenkins.yml rm -f notification_service' } }
             steps {
                 script {
                     sh 'docker-compose -f docker-compose.jenkins.yml up -d notification_service'
                     sh 'sleep 5'
-                    // Test simple : on vérifie que le fichier index.php existe
-                    sh 'docker-compose -f docker-compose.jenkins.yml exec -T notification_service ls -la /var/www/html/index.php'
+                    // Vérification de syntaxe PHP (Lint)
+                    sh 'docker-compose -f docker-compose.jenkins.yml exec -T notification_service php -l /app/src/index.php'
                 }
             }
         }

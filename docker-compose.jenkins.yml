@@ -1,7 +1,8 @@
+# Fichier: docker-compose.jenkins.yml (COMPLET - 4 Services)
 version: '3.8'
 
 services:
-  # Service 1: Laravel
+  # 1. Laravel (Utilisateurs)
   user_service:
     build:
       context: ./services/user-service
@@ -19,7 +20,7 @@ services:
       - CACHE_DRIVER=array
       - SESSION_DRIVER=array
 
-  # Service 2: Symfony
+  # 2. Symfony (Événements)
   event_service:
     build:
       context: ./services/event-service
@@ -30,7 +31,7 @@ services:
     environment:
       - DATABASE_URL=mysql://root:root_password@db_mysql:3306/db_events?serverVersion=8.0
 
-  # Service 3: Réservation (PHP Pur) - NOUVEAU
+  # 3. Réservation (PHP Natif)
   reservation_service:
     build:
       context: ./services/reservation-service
@@ -39,7 +40,7 @@ services:
     networks:
       - events_network
 
-  # Service 4: Notification - NOUVEAU
+  # 4. Notification (PHP Natif)
   notification_service:
     build:
       context: ./services/notification-service
