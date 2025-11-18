@@ -1,7 +1,35 @@
+# Fichier: docker-compose.yml (POUR VOIR L'APPLICATION)
 version: '3.8'
 
 services:
-  # --- 1. Service Utilisateur (Laravel) ---
+  # 1. FRONTEND (L'interface graphique)
+  frontend:
+    build:
+      context: ./services/frontend
+      dockerfile: Dockerfile
+    container_name: frontend_app
+    ports:
+      - "3000:80"  # <-- L'interface sera ici !
+    networks:
+      - events_network
+
+  # 2. API GATEWAY (Le routeur)
+  api_gateway:
+    build:
+      context: ./services/api-gateway
+      dockerfile: Dockerfile
+    container_name: api_gateway_app
+    ports:
+      - "8081:80" # La porte d'entrée des APIs
+    depends_on:
+      - user_service
+      - event_service
+      - reservation_service
+      - notification_service
+    networks:
+      - events_network
+
+  # 3. Service Laravel
   user_service:
     build:
       context: ./services/user-service
@@ -11,22 +39,18 @@ services:
     working_dir: /var/www
     volumes:
       - ./services/user-service:/var/www
-    depends_on:
-      - db_mysql
-      - cache_redis
-    networks:
-      - events_network
     environment:
-      - APP_KEY=base64:IgYfA8Xz1lUUQPItd/y/G9J0A9m9fP9hK/T2h/u3N8Y=
       - DB_CONNECTION=mysql
       - DB_HOST=db_mysql
       - DB_DATABASE=db_events_main
       - DB_USERNAME=root
       - DB_PASSWORD=root_password
-      - CACHE_DRIVER=array
-      - SESSION_DRIVER=array
+    depends_on:
+      - db_mysql
+    networks:
+      - events_network
 
-  # --- 2. Service Événements (Symfony) ---
+  # 4. Service Symfony
   event_service:
     build:
       context: ./services/event-service
@@ -34,15 +58,14 @@ services:
     container_name: event_service_app
     restart: unless-stopped
     working_dir: /var/www
-    depends_on:
-      - db_mysql
-      - cache_redis
-    networks:
-      - events_network
     environment:
       - DATABASE_URL=mysql://root:root_password@db_mysql:3306/db_events?serverVersion=8.0
+    depends_on:
+      - db_mysql
+    networks:
+      - events_network
 
-  # --- 3. Service Réservation (PHP Pur) ---
+  # 5. Service Réservation
   reservation_service:
     build:
       context: ./services/reservation-service
@@ -52,7 +75,7 @@ services:
     networks:
       - events_network
 
-  # --- 4. Service Notification (PHP Pur) ---
+  # 6. Service Notification
   notification_service:
     build:
       context: ./services/notification-service
@@ -62,43 +85,14 @@ services:
     networks:
       - events_network
 
-  # --- 5. API Gateway (Nginx) ---
-  api_gateway:
-    build:
-      context: ./services/api-gateway
-      dockerfile: Dockerfile
-    container_name: api_gateway_app
-    ports:
-      - "80:80" # Accessible sur http://localhost
-    depends_on:
-      - user_service
-      - event_service
-      - reservation_service
-      - notification_service
-    networks:
-      - events_network
-
-  # --- 6. Front-End (React) ---
-  frontend:
-    build:
-      context: ./services/frontend
-      dockerfile: Dockerfile
-    container_name: frontend_app
-    ports:
-      - "3000:80" # Accessible sur http://localhost:3000
-    networks:
-      - events_network
-
   # --- INFRASTRUCTURE ---
   db_mysql:
     image: mysql:8.0
     container_name: mysql_events
     restart: unless-stopped
     environment:
-      MYSQL_DATABASE: db_events_main
       MYSQL_ROOT_PASSWORD: root_password
-      MYSQL_USER: user
-      MYSQL_PASSWORD: password
+      MYSQL_DATABASE: db_events_main
     ports:
       - "3306:3306"
     volumes:
@@ -107,77 +101,20 @@ services:
     networks:
       - events_network
 
-  db_postgres:
-    image: postgres:14
-    container_name: postgres_sonar
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: sonar
-      POSTGRES_PASSWORD: sonar
-      POSTGRES_DB: sonar
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - events_network
-
-  cache_redis:
-    image: redis:6.2-alpine
-    container_name: redis_events
-    restart: unless-stopped
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    networks:
-      - events_network
-
+  # (On garde Jenkins allumé pour la forme, mais on ne s'en sert plus)
   jenkins_server:
-    build:
-      context: ./jenkins-server
+    image: jenkins/jenkins:lts-jdk11
     container_name: jenkins_server
-    user: root
     restart: unless-stopped
     ports:
       - "8080:8080"
-      - "50000:50000"
-    dns:
-      - 8.8.8.8
-      - 8.8.4.4
-    volumes:
-      - jenkins_data:/var/jenkins_home
-      - //var/run/docker.sock:/var/run/docker.sock
-    networks:
-      - events_network
-
-  sonarqube:
-    image: sonarqube:9.9-community
-    container_name: sonarqube_server
-    restart: unless-stopped
-    ports:
-      - "9000:9000"
-    environment:
-      SONAR_JDBC_URL: jdbc:postgresql://db_postgres:5432/sonar
-      SONAR_JDBC_USERNAME: sonar
-      SONAR_JDBC_PASSWORD: sonar
-    volumes:
-      - sonarqube_data:/opt/sonarqube/data
-      - sonarqube_extensions:/opt/sonarqube/extensions
-      - sonarqube_logs:/opt/sonarqube/logs
-    depends_on:
-      - db_postgres
     networks:
       - events_network
 
 volumes:
   mysql_data:
-  postgres_data:
-  redis_data:
   jenkins_data:
-  sonarqube_data:
-  sonarqube_extensions:
-  sonarqube_logs:
 
 networks:
   events_network:
     driver: bridge
-    enable_ipv6: false
