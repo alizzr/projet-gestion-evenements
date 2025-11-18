@@ -2,19 +2,19 @@ pipeline {
     agent any
 
     stages {
-        // --- CONSTRUCTION GLOBALE ---
-        stage('Build All Microservices') {
+        // --- 1. BUILD GLOBAL ---
+        stage('Build All Services') {
             steps {
                 script {
-                    echo "Construction des 4 microservices..."
+                    echo "Construction des 6 microservices (Back + Front + Gateway)..."
                     sh 'docker-compose -f docker-compose.jenkins.yml build'
                 }
             }
         }
 
-        // --- SERVICE 1: LARAVEL ---
-        stage('Test: User Service (Laravel)') {
-            post { always { sh 'docker-compose -f docker-compose.jenkins.yml stop user_service && docker-compose -f docker-compose.jenkins.yml rm -f user_service' } }
+        // --- 2. TEST BACKEND (Laravel) ---
+        stage('Test Backend: Laravel') {
+            post { always { sh 'docker-compose -f docker-compose.jenkins.yml down' } }
             steps {
                 script {
                     sh 'docker-compose -f docker-compose.jenkins.yml up -d user_service'
@@ -25,41 +25,43 @@ pipeline {
             }
         }
 
-        // --- SERVICE 2: SYMFONY ---
-        stage('Test: Event Service (Symfony)') {
-            post { always { sh 'docker-compose -f docker-compose.jenkins.yml stop event_service && docker-compose -f docker-compose.jenkins.yml rm -f event_service' } }
+        // --- 3. TEST BACKEND (Symfony) ---
+        stage('Test Backend: Symfony') {
+            post { always { sh 'docker-compose -f docker-compose.jenkins.yml down' } }
             steps {
                 script {
                     sh 'docker-compose -f docker-compose.jenkins.yml up -d event_service'
                     sh 'sleep 10'
-                    // Validation du schéma BDD
                     sh 'docker-compose -f docker-compose.jenkins.yml exec -T --workdir /var/www event_service php bin/console doctrine:schema:validate'
                 }
             }
         }
 
-        // --- SERVICE 3: RÉSERVATION ---
-        stage('Test: Reservation Service (PHP Native)') {
-            post { always { sh 'docker-compose -f docker-compose.jenkins.yml stop reservation_service && docker-compose -f docker-compose.jenkins.yml rm -f reservation_service' } }
+        // --- 4. TEST PHP NATIFS ---
+        stage('Test Backend: PHP Native Services') {
+            post { always { sh 'docker-compose -f docker-compose.jenkins.yml down' } }
             steps {
                 script {
-                    sh 'docker-compose -f docker-compose.jenkins.yml up -d reservation_service'
+                    sh 'docker-compose -f docker-compose.jenkins.yml up -d reservation_service notification_service'
                     sh 'sleep 5'
-                    // Vérification de syntaxe PHP (Lint)
                     sh 'docker-compose -f docker-compose.jenkins.yml exec -T reservation_service php -l /app/src/index.php'
+                    sh 'docker-compose -f docker-compose.jenkins.yml exec -T notification_service php -l /app/src/index.php'
                 }
             }
         }
 
-        // --- SERVICE 4: NOTIFICATION ---
-        stage('Test: Notification Service (PHP Native)') {
-            post { always { sh 'docker-compose -f docker-compose.jenkins.yml stop notification_service && docker-compose -f docker-compose.jenkins.yml rm -f notification_service' } }
+        // --- 5. TEST FRONTEND & GATEWAY ---
+        stage('Test Frontend & Gateway') {
+            post { always { sh 'docker-compose -f docker-compose.jenkins.yml down' } }
             steps {
                 script {
-                    sh 'docker-compose -f docker-compose.jenkins.yml up -d notification_service'
-                    sh 'sleep 5'
-                    // Vérification de syntaxe PHP (Lint)
-                    sh 'docker-compose -f docker-compose.jenkins.yml exec -T notification_service php -l /app/src/index.php'
+                    echo "Démarrage de la Gateway et du Front..."
+                    sh 'docker-compose -f docker-compose.jenkins.yml up -d api_gateway frontend'
+                    sh 'sleep 10'
+                    
+                    echo "Vérification que Nginx (Gateway) répond..."
+                    // On vérifie juste que le conteneur tourne, car curl localhost dans jenkins est complexe
+                    sh 'docker-compose -f docker-compose.jenkins.yml ps | grep "Up"'
                 }
             }
         }

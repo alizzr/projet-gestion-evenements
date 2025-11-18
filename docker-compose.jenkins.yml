@@ -53,3 +53,29 @@ networks:
   events_network:
     external: true
     name: projet-gestion-evenements_events_network
+# ... (après notification_service)
+
+  # 5. API Gateway - NOUVEAU
+  api_gateway:
+    build:
+      context: ./services/api-gateway
+      dockerfile: Dockerfile
+    container_name: api_gateway_test
+    ports:
+      - "8081:80" # On expose sur 8081 pour ne pas conflire avec Jenkins (8080) ou Sonar (9000)
+    depends_on:
+      - user_service
+      - event_service
+      - reservation_service
+      - notification_service
+    networks:
+      - events_network
+
+  # 6. Front-End (React) - NOUVEAU
+  frontend:
+    build:
+      context: ./services/frontend
+      dockerfile: Dockerfile
+    container_name: frontend_test
+    networks:
+      - events_network
