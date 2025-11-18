@@ -1,4 +1,4 @@
-# Fichier: docker-compose.jenkins.yml (Corrigé avec les variables d'environnement)
+# Fichier: docker-compose.jenkins.yml (MODE URGENCE: ROOT)
 version: '3.8'
 
 services:
@@ -10,14 +10,14 @@ services:
     container_name: user_service_test_app
     networks:
       - events_network
-    # --- AJOUTÉ : Configuration pour les tests Laravel ---
     environment:
       - APP_KEY=base64:IgYfA8Xz1lUUQPItd/y/G9J0A9m9fP9hK/T2h/u3N8Y=
       - DB_CONNECTION=mysql
       - DB_HOST=db_mysql
       - DB_DATABASE=db_events_main
-      - DB_USERNAME=user
-      - DB_PASSWORD=password
+      # ON UTILISE ROOT ICI POUR FORCER L'ACCÈS
+      - DB_USERNAME=root
+      - DB_PASSWORD=root_password
       - CACHE_DRIVER=array
       - SESSION_DRIVER=array
 
@@ -29,10 +29,9 @@ services:
     container_name: event_service_test_app
     networks:
       - events_network
-    # --- AJOUTÉ : Configuration pour les tests Symfony ---
     environment:
-      # C'est la variable que Symfony lit
-      - DATABASE_URL=mysql://user:password@db_mysql:3306/db_events?serverVersion=8.0
+      # ON UTILISE ROOT ICI AUSSI
+      - DATABASE_URL=mysql://root:root_password@db_mysql:3306/db_events?serverVersion=8.0
 
 networks:
   events_network:
