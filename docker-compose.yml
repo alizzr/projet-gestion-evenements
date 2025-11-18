@@ -9,14 +9,16 @@ services:
     container_name: mysql_events
     restart: unless-stopped
     environment:
-      MYSQL_DATABASE: db_events_main,db_sonar,db_events
+      MYSQL_ROOT_PASSWORD: root_password
       MYSQL_USER: user
       MYSQL_PASSWORD: password
-      MYSQL_ROOT_PASSWORD: root_password
+      # Supprimez MYSQL_DATABASE si elle y est encore, le script s'en occupe
     ports:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+      # --- AJOUTEZ CETTE LIGNE ---
+      - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - events_network
 
