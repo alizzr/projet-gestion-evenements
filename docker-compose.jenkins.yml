@@ -1,8 +1,8 @@
-# Fichier: docker-compose.jenkins.yml (COMPLET - 4 Services)
+# Fichier: docker-compose.jenkins.yml (CORRIGÉ & COMPLET)
 version: '3.8'
 
 services:
-  # 1. Laravel (Utilisateurs)
+  # 1. Service Laravel
   user_service:
     build:
       context: ./services/user-service
@@ -20,7 +20,7 @@ services:
       - CACHE_DRIVER=array
       - SESSION_DRIVER=array
 
-  # 2. Symfony (Événements)
+  # 2. Service Symfony
   event_service:
     build:
       context: ./services/event-service
@@ -31,7 +31,7 @@ services:
     environment:
       - DATABASE_URL=mysql://root:root_password@db_mysql:3306/db_events?serverVersion=8.0
 
-  # 3. Réservation (PHP Natif)
+  # 3. Service Réservation
   reservation_service:
     build:
       context: ./services/reservation-service
@@ -40,7 +40,7 @@ services:
     networks:
       - events_network
 
-  # 4. Notification (PHP Natif)
+  # 4. Service Notification
   notification_service:
     build:
       context: ./services/notification-service
@@ -49,20 +49,14 @@ services:
     networks:
       - events_network
 
-networks:
-  events_network:
-    external: true
-    name: projet-gestion-evenements_events_network
-# ... (après notification_service)
-
-  # 5. API Gateway - NOUVEAU
+  # 5. API Gateway (CORRIGÉ : Bien aligné sous services)
   api_gateway:
     build:
       context: ./services/api-gateway
       dockerfile: Dockerfile
     container_name: api_gateway_test
     ports:
-      - "8081:80" # On expose sur 8081 pour ne pas conflire avec Jenkins (8080) ou Sonar (9000)
+      - "8081:80"
     depends_on:
       - user_service
       - event_service
@@ -71,7 +65,7 @@ networks:
     networks:
       - events_network
 
-  # 6. Front-End (React) - NOUVEAU
+  # 6. Frontend (CORRIGÉ : Bien aligné sous services)
   frontend:
     build:
       context: ./services/frontend
@@ -79,3 +73,9 @@ networks:
     container_name: frontend_test
     networks:
       - events_network
+
+# Le bloc networks doit être TOUT EN BAS, complètement à gauche
+networks:
+  events_network:
+    external: true
+    name: projet-gestion-evenements_events_network
