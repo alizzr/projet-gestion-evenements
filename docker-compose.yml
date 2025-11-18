@@ -1,28 +1,112 @@
-# Fichier: docker-compose.yml (FINAL Corrigé avec le réseau)
+version: '3.8'
 
 services:
+  # --- 1. Service Utilisateur (Laravel) ---
+  user_service:
+    build:
+      context: ./services/user-service
+      dockerfile: Dockerfile
+    container_name: user_service_app
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - ./services/user-service:/var/www
+    depends_on:
+      - db_mysql
+      - cache_redis
+    networks:
+      - events_network
+    environment:
+      - APP_KEY=base64:IgYfA8Xz1lUUQPItd/y/G9J0A9m9fP9hK/T2h/u3N8Y=
+      - DB_CONNECTION=mysql
+      - DB_HOST=db_mysql
+      - DB_DATABASE=db_events_main
+      - DB_USERNAME=root
+      - DB_PASSWORD=root_password
+      - CACHE_DRIVER=array
+      - SESSION_DRIVER=array
 
-  # --- Service Utilisateur (Laravel) ---
-    # --- Base de données pour LARAVEL ---
+  # --- 2. Service Événements (Symfony) ---
+  event_service:
+    build:
+      context: ./services/event-service
+      dockerfile: Dockerfile
+    container_name: event_service_app
+    restart: unless-stopped
+    working_dir: /var/www
+    depends_on:
+      - db_mysql
+      - cache_redis
+    networks:
+      - events_network
+    environment:
+      - DATABASE_URL=mysql://root:root_password@db_mysql:3306/db_events?serverVersion=8.0
+
+  # --- 3. Service Réservation (PHP Pur) ---
+  reservation_service:
+    build:
+      context: ./services/reservation-service
+      dockerfile: Dockerfile
+    container_name: reservation_service_app
+    restart: unless-stopped
+    networks:
+      - events_network
+
+  # --- 4. Service Notification (PHP Pur) ---
+  notification_service:
+    build:
+      context: ./services/notification-service
+      dockerfile: Dockerfile
+    container_name: notification_service_app
+    restart: unless-stopped
+    networks:
+      - events_network
+
+  # --- 5. API Gateway (Nginx) ---
+  api_gateway:
+    build:
+      context: ./services/api-gateway
+      dockerfile: Dockerfile
+    container_name: api_gateway_app
+    ports:
+      - "80:80" # Accessible sur http://localhost
+    depends_on:
+      - user_service
+      - event_service
+      - reservation_service
+      - notification_service
+    networks:
+      - events_network
+
+  # --- 6. Front-End (React) ---
+  frontend:
+    build:
+      context: ./services/frontend
+      dockerfile: Dockerfile
+    container_name: frontend_app
+    ports:
+      - "3000:80" # Accessible sur http://localhost:3000
+    networks:
+      - events_network
+
+  # --- INFRASTRUCTURE ---
   db_mysql:
     image: mysql:8.0
     container_name: mysql_events
     restart: unless-stopped
     environment:
+      MYSQL_DATABASE: db_events_main
       MYSQL_ROOT_PASSWORD: root_password
       MYSQL_USER: user
       MYSQL_PASSWORD: password
-      # Supprimez MYSQL_DATABASE si elle y est encore, le script s'en occupe
     ports:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
-      # --- AJOUTEZ CETTE LIGNE ---
       - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - events_network
 
-  # --- Base de données pour SONARQUBE ---
   db_postgres:
     image: postgres:14
     container_name: postgres_sonar
@@ -36,7 +120,6 @@ services:
     networks:
       - events_network
 
-  # --- Service de Caching ---
   cache_redis:
     image: redis:6.2-alpine
     container_name: redis_events
@@ -48,7 +131,6 @@ services:
     networks:
       - events_network
 
-  # --- Serveur d'Intégration Continue ---
   jenkins_server:
     build:
       context: ./jenkins-server
@@ -67,23 +149,6 @@ services:
     networks:
       - events_network
 
-# --- Service Événements (Symfony) ---
-  event_service:
-    build:
-      context: ./services/event-service
-      dockerfile: Dockerfile
-    container_name: event_service_app
-    restart: unless-stopped
-    working_dir: /var/www
-    # On le démarre pour que Jenkins puisse le tester
-    command: php-fpm
-    depends_on:
-      - db_mysql
-      - cache_redis
-    networks:
-      - events_network
-
-  # --- Serveur d'Analyse de Code ---
   sonarqube:
     image: sonarqube:9.9-community
     container_name: sonarqube_server
@@ -103,7 +168,6 @@ services:
     networks:
       - events_network
 
-# --- VOLUMES (À la racine, pas d'indentation) ---
 volumes:
   mysql_data:
   postgres_data:
@@ -113,10 +177,7 @@ volumes:
   sonarqube_extensions:
   sonarqube_logs:
 
-# --- RÉSEAUX (À la racine, pas d'indentation) ---
 networks:
   events_network:
     driver: bridge
-    # --- LA CORRECTION EST ICI ---
-    # (Indenté sous 'events_network')
     enable_ipv6: false

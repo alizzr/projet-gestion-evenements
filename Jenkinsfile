@@ -50,17 +50,14 @@ pipeline {
             }
         }
 
-        // --- 5. TEST FRONTEND & GATEWAY ---
+       // --- 5. TEST FRONTEND & GATEWAY ---
         stage('Test Frontend & Gateway') {
             post { always { sh 'docker-compose -f docker-compose.jenkins.yml down' } }
             steps {
                 script {
-                    echo "Démarrage de la Gateway et du Front..."
                     sh 'docker-compose -f docker-compose.jenkins.yml up -d api_gateway frontend'
-                    sh 'sleep 10'
-                    
-                    echo "Vérification que Nginx (Gateway) répond..."
-                    // On vérifie juste que le conteneur tourne, car curl localhost dans jenkins est complexe
+                    sh 'sleep 5'
+                    // On vérifie juste que les conteneurs tournent
                     sh 'docker-compose -f docker-compose.jenkins.yml ps | grep "Up"'
                 }
             }

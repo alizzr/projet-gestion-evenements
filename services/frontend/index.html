@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestion Événements - Microservices</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; padding-top: 50px; }
+        .service-card { margin-bottom: 20px; transition: transform 0.3s; }
+        .service-card:hover { transform: translateY(-5px); }
+        .status-dot { height: 10px; width: 10px; background-color: #28a745; border-radius: 50%; display: inline-block; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="text-center mb-5">
+            <h1 class="display-4">Architecture Microservices</h1>
+            <p class="lead">Application de Gestion d'Événements</p>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card service-card border-primary">
+                    <div class="card-header bg-primary text-white">Service Utilisateur (Laravel)</div>
+                    <div class="card-body">
+                        <p>Gère l'authentification et les profils.</p>
+                        <button onclick="testUser()" class="btn btn-outline-primary btn-sm">Tester API</button>
+                        <div id="user-result" class="mt-2 text-muted small"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card service-card border-success">
+                    <div class="card-header bg-success text-white">Service Événements (Symfony)</div>
+                    <div class="card-body">
+                        <p>Gère le catalogue des événements.</p>
+                        <button onclick="testEvent()" class="btn btn-outline-success btn-sm">Tester API</button>
+                        <div id="event-result" class="mt-2 text-muted small"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card service-card border-warning">
+                    <div class="card-header bg-warning text-dark">Service Réservation (PHP Natif)</div>
+                    <div class="card-body">
+                        <p>Gère les paiements (Simulés).</p>
+                        <span class="badge bg-success">Actif</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card service-card border-info">
+                    <div class="card-header bg-info text-white">Service Notification (PHP Natif)</div>
+                    <div class="card-body">
+                        <p>Envoi d'emails de confirmation.</p>
+                        <span class="badge bg-success">Actif</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Test simple via l'API Gateway
+        async function testUser() {
+            try {
+                // On tape sur la Gateway qui redirige vers le microservice
+                const response = await fetch('http://localhost:8081/api/users/test'); 
+                document.getElementById('user-result').innerText = "Statut: Connecté à l'API Gateway";
+            } catch (e) {
+                document.getElementById('user-result').innerText = "Erreur de connexion (CORS ou Réseau)";
+            }
+        }
+
+        function testEvent() {
+             document.getElementById('event-result').innerText = "Appel API simulé vers Symfony...";
+        }
+    </script>
+</body>
+</html>
